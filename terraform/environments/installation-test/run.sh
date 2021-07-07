@@ -7,7 +7,7 @@
 
   branch="${1:-devel}"
   tmpdir="$(mktemp -d)"
-  trap "terraform destroy -auto-approve; rm -rf \$tmpdir; ssh -S ncp-testing -O exit root@\${ipv4_address}" EXIT 1 2 3 4
+  trap "terraform destroy; rm -rf \$tmpdir; ssh -S ncp-testing -O exit root@\${ipv4_address}" EXIT 1 2 3 4
   terraform apply -var="branch=${branch}"
   ipv4_address="$(terraform output -raw test_server_ipv4)"
   ssh-keygen -f "$HOME/.ssh/known_hosts" -R "${ipv4_address}" 2> /dev/null
