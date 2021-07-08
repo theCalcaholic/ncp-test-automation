@@ -12,16 +12,14 @@
 # Setup
 
 1. Clone this repository
-2. Inside the cloned repository create the file terraform/environments/installation-test/terraform.tfvars with the following content:
+2. Inside the cloned repository create the file terraform/terraform.tfvars with the following content:
 
 ```hcl
 admin_ssh_privkey_path = "/home/your-user/.ssh/your-ssh-key"
-admin_ssh_pubkey = "ssh-ed25519 YOUR SSH_PUBLIC_KEY AS PASTED FROM /home/your-user/.ssh/your-ssh-key.pub"
+admin_ssh_pubkey_path = "/home/your-user/.ssh/your-ssh-key.pub"
 hcloud_ncp_playground_api_token = "your-hetzner-cloud-api-token"
 ```
 
-3. Inside terraform/environments/installation-test run the command `terraform init`
-
 # Usage
 
-1. Run the run.sh script inside the directory terraform/environments/installation-test (more setups will be added in the future).
+1. Run the script `ncp-installation-tests.sh` inside the `/bin` directory (more setups will be added in the future).

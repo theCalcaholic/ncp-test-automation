@@ -3,7 +3,7 @@ variable "hcloud_ncp_playground_api_token" {
   sensitive = true
 }
 
-variable "admin_ssh_pubkey" {
+variable "admin_ssh_pubkey_fingerprint" {
   type = string
 }
 

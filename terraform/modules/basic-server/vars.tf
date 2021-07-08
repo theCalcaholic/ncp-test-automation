@@ -19,7 +19,7 @@ variable "location" {
 
 variable "post_setup_script" {
   type = list(string)
-  default = []
+  default = ["true"]
 }
 
 variable "admin_ssh_privkey" {
