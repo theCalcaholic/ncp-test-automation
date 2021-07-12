@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
+BIN_DIR="$(realpath "$(dirname "${BASH_SOURCE[0]}")")"
+PROJECT_ROOT="$(realpath "$BIN_DIR/..")"
+
+ssh_control_socket="/dev/shm/ncp-testing-$RANDOM"
+
+. "${PROJECT_ROOT}/lib/bash-args/parse_args.sh"
 
 # tf-apply path var-file args
 tf-apply() {
@@ -49,18 +55,15 @@ tf-output() {
 # ensure-postinstall-snapshot ssh_pubkey_fprint [branch [--force]]
 ensure-postinstall-snapshot() {
 
-
-  local script_dir="$(realpath "$(dirname "${BASH_SOURCE[0]}")")"
-  local project_root="$(realpath "$script_dir/..")"
-  local var_file="${project_root}/terraform/terraform.tfvars"
-  local tf_snapshot="${project_root}/terraform/tasks/snapshot"
-  local tf_snapshot_provider="${project_root}/terraform/tasks/ncp-postinstall/snapshot-provider"
+  local var_file="${PROJECT_ROOT}/terraform/terraform.tfvars"
+  local tf_snapshot="${PROJECT_ROOT}/terraform/tasks/snapshot"
+  local tf_snapshot_provider="${PROJECT_ROOT}/terraform/tasks/ncp-postinstall/snapshot-provider"
   local ssh_pubkey_fprint=${1}
   local branch="${2:-devel}"
 
   (
   set -e
-  if [[ " $* " =~ .*" --force ".* ]] || ! hcloud image list -t snapshot -l "type=ncp-postinstall,branch=${branch//\/-}" -o noheader -o columns=created | grep -qv -e day  -e week -e year -e month
+  if [[ " $* " =~ .*" --force ".* ]] || ! hcloud image list -t snapshot -l "type=ncp-postinstall,branch=${branch//\//-}" -o noheader -o columns=created | grep -qv -e day  -e week -e year -e month
   then
     trap 'tf-destroy "$tf_snapshot_provider" "$var_file" -var="branch=${branch}" -var="admin_ssh_pubkey_fingerprint=${ssh_pubkey_fprint}"' EXIT
     echo "Creating ncp postinstall snapshot"
@@ -72,4 +75,98 @@ ensure-postinstall-snapshot() {
 
   fi
   )
+}
+
+# setup-ssh-port-forwarding server-address
+setup-ssh-port-forwarding() {
+  ssh-keygen -f "$HOME/.ssh/known_hosts" -R "${1?}" 2> /dev/null
+    ssh -o "StrictHostKeyChecking=no" \
+      -M -S "$ssh_control_socket" -fNT \
+      -L 8443:127.0.0.1:443 -L 9443:127.0.0.1:4443 root@"${1}" \
+      sleep 600
+}
+
+# terminate-ssh-port-forwarding server-address
+terminate-ssh-port-forwarding() {
+    ssh -S "$ssh_control_socket" -O exit "root@${1:-stub}"
+}
+
+# test-ncp-instance ssh-connection server-address nc-port webui-port [--activate] [--flag-snapshot snapshot-id]
+test-ncp-instance() {
+
+  local DESCRIPTION="Runs automated integration tests against an ncp instance"
+  local KEYWORDS=("-a|--activate;bool" "-f|--flag-snapshot" "-n|--non-interactive;bool")
+  local REQUIRED=("ssh-connection" "server-address" "nc-port" "webui-port")
+  local -A USAGE
+  USAGE['server]']="The address (IP address, URL, ...) of the ncp instance. Needs to be reachable passwordless via ssh with user root"
+  USAGE['ssh-connection']="How to connect to the server via ssh in the format user@server-address[:port]"
+  USAGE['server-address']="The address where the server can be reached via https"
+  USAGE['nc-port']="The port where Nextcloud can be reached (i.e. at https://server-address:nc-port)"
+  USAGE['webui-port']="The port where the admin web UI can be reached (i.e. at https://server-address:webui-port)"
+  USAGE['-a']="Perform activation test first (requires fresh, not activated ncp installation)"
+  USAGE['-f']="flag snapshot given as snapshot id with test result (success or failure)"
+  USAGE['-n']="Omit all interactive dialogs (and assume default answer)"
+
+  parse_args "$@" || exit $?
+
+  for k in "${!NAMED_ARGS[@]}"
+  do
+    echo "$k -> ${NAMED_ARGS[$k]}"
+  done
+
+  snapshot_id="${KW_ARGS['--flag-snapshot']:-${KW_ARGS['-f']}}"
+
+
+  [[ -n "$NCP_AUTOMATION_DIR" ]] || {
+    export NCP_AUTOMATION_DIR="$(mktemp -d)"
+  }
+
+  trap '[[ -z "$NCP_AUTOMATION_DIR" ]] || rm -rf "$NCP_AUTOMATION_DIR"' EXIT
+
+  (
+  set -e
+  cd "${NCP_AUTOMATION_DIR?}"
+
+  virtualenv "$NCP_AUTOMATION_DIR/venv"
+  . "$NCP_AUTOMATION_DIR/venv/bin/activate"
+  pip install selenium
+  git clone https://github.com/nextcloud/nextcloudpi.git
+  cd nextcloudpi/tests
+  git checkout "${branch}"
+
+  failed=no
+
+  if [[ "${KW_ARGS['-a']:-${KW_ARGS['--activate']}}" == "true" ]]
+  then
+    python activation_tests.py "${NAMED_ARGS['server-address']}" "${NAMED_ARGS['nc-port']}" "${NAMED_ARGS['webui-port']}" || {
+      echo "Activation test failed!"
+
+      [[ "${KW_ARGS['-n']}" != "true" ]] || exit 2
+      read -n 1 -rp "Continue anyway? (y|N)" choice
+      [[ "${choice,,}" == "y" ]] || {
+        echo ""
+        exit 2
+      }
+      failed=yes
+    }
+  fi
+  python system_tests.py "${NAMED_ARGS['ssh-connection']}" || {
+    echo "System test failed!"
+    failed=yes
+  }
+  python nextcloud_tests.py "${NAMED_ARGS['server-address']}" "${NAMED_ARGS['nc-port']}" "${NAMED_ARGS['webui-port']}" || {
+    echo "Nextcloud test failed!"
+    failed=yes
+  }
+
+  [[ "$failed" != "yes" ]] || {
+    [[ -z "$snapshot_id" ]] || hcloud image add-label -o "$snapshot_id" "test-result=failure"
+    exit 2
+  }
+
+  echo "All tests succeeded"
+  [[ -z "$snapshot_id" ]] || hcloud image add-label -o "$snapshot_id" "test-result=success"
+
+  )
+
 }
