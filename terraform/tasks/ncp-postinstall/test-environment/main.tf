@@ -3,7 +3,7 @@ data "hcloud_ssh_key" "admin_key" {
 }
 
 data "hcloud_image" "postinstall_image" {
-  with_selector = "branch=${var.branch},type=ncp-postinstall"
+  with_selector = "branch=${replace(var.branch, "/", "-")},type=ncp-postinstall"
   most_recent = true
 }
 

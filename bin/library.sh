@@ -10,8 +10,10 @@ tf-apply() {
 
   (
   cd "$tf_path" || exit 1
-  terraform apply -auto-approve -var-file="$tf_varfile" "${args[@]}" \
-    || terraform destroy -auto-approve -var-file="$tf_varfile" "${args[@]}"
+  rc=0
+  terraform apply -auto-approve -var-file="$tf_varfile" "${args[@]}" || rc=$?
+  [[ $rc -eq 0 ]] || terraform destroy -auto-approve -var-file="$tf_varfile" "${args[@]}"
+  exit $rc
   )
 }
 
@@ -24,6 +26,7 @@ tf-destroy() {
   args=("$@")
 
   (
+  set -e
   cd "$tf_path" || exit 1
   terraform destroy -auto-approve -var-file="$tf_varfile" "${args[@]}"
   )
@@ -37,6 +40,7 @@ tf-output() {
   [[ -z "${1}" ]] || args=("-raw" "${1}")
 
   (
+  set -e
   cd "$tf_path" || exit 1
   terraform output "${args[@]}"
   )
@@ -56,14 +60,13 @@ ensure-postinstall-snapshot() {
 
   (
   set -e
-  if [[ " $* " =~ .*" --force ".* ]] || ! hcloud image list -t snapshot -l "type=ncp-postinstall,branch=${branch}" -o noheader -o columns=created | grep -qv -e day  -e week -e year -e month
+  if [[ " $* " =~ .*" --force ".* ]] || ! hcloud image list -t snapshot -l "type=ncp-postinstall,branch=${branch//\/-}" -o noheader -o columns=created | grep -qv -e day  -e week -e year -e month
   then
     trap 'tf-destroy "$tf_snapshot_provider" "$var_file" -var="branch=${branch}" -var="admin_ssh_pubkey_fingerprint=${ssh_pubkey_fprint}"' EXIT
     echo "Creating ncp postinstall snapshot"
     tf-apply "$tf_snapshot_provider" "$var_file" -var="branch=${branch}" -var="admin_ssh_pubkey_fingerprint=${ssh_pubkey_fprint}"
-    sleep 30
     snapshot_provider_id="$(tf-output "$tf_snapshot_provider" snapshot_provider_id)"
-    tf-apply "$tf_snapshot" "$var_file" -var="branch=${branch}" -var="snapshot_provider_id=${snapshot_provider_id}" -state-out="${tf_snapshot}/${branch}.tfstate"
+    tf-apply "$tf_snapshot" "$var_file" -var="branch=${branch}" -var="snapshot_provider_id=${snapshot_provider_id}" -state="${tf_snapshot}/${branch//\//.}.tfstate"
     tf-destroy "$tf_snapshot_provider" "$var_file" -var="branch=${branch}" -var="admin_ssh_pubkey_fingerprint=${ssh_pubkey_fprint}"
     trap - EXIT
 

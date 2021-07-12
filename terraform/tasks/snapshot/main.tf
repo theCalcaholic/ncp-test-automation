@@ -3,8 +3,9 @@ resource "hcloud_snapshot" "ncp-postinstall" {
   description = "postinstall snapshot for ${var.branch} branch"
 
   labels = {
-    branch = var.branch
+    branch = replace(var.branch, "/", "-")
     type = "ncp-postinstall"
+    test-result = "none"
   }
 }
 

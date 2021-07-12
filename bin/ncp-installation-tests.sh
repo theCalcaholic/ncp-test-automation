@@ -48,19 +48,26 @@ ssh_pubkey_fprint="$(tf-output "$tf_project_setup" admin_ssh_pubkey_fingerprint)
 #
 #fi
 
-ensure-postinstall-snapshot "$ssh_pubkey_fprint" "$branch"
+ensure-postinstall-snapshot "$ssh_pubkey_fprint" "$branch" || {
+  echo "Could not create ncp postinstall snapshot (and none was present)"
+  exit 1
+}
 
 cleanup() {
   set -x
-  set +e
-  [[ -z "$NCP_AUTOMATION_DIR" ]] || rm -rf "$NCP_AUTOMATION_DIR"
-  ssh -S "$ssh_control_socket" -O exit "root@${ipv4_address}"
-  tf-destroy "$tf_test_env" "$var_file" -var="branch=${branch}" -var="admin_ssh_pubkey_fingerprint=${ssh_pubkey_fprint}"
+  (
+    set +e
+    [[ -z "$NCP_AUTOMATION_DIR" ]] || rm -rf "$NCP_AUTOMATION_DIR"
+    ssh -S "$ssh_control_socket" -O exit "root@${ipv4_address}"
+    tf-destroy "$tf_test_env" "$var_file" -var="branch=${branch}" -var="admin_ssh_pubkey_fingerprint=${ssh_pubkey_fprint}"
+    exit 0
+  )
 }
 
 trap "cleanup; trap - EXIT;" EXIT 1 2
 tf-apply "$tf_test_env" "$var_file" -var="branch=${branch}" -var="admin_ssh_pubkey_fingerprint=${ssh_pubkey_fprint}"
 ipv4_address="$(tf-output "$tf_test_env" test_server_ipv4)"
+snapshot_id="$(tf-output "$tf_test_env" snapshot_id)"
 
 ssh-keygen -f "$HOME/.ssh/known_hosts" -R "${ipv4_address}" 2> /dev/null
   ssh -o "StrictHostKeyChecking=no" \
@@ -96,8 +103,12 @@ ssh-keygen -f "$HOME/.ssh/known_hosts" -R "${ipv4_address}" 2> /dev/null
     failed=yes
   }
 
-  [[ "$failed" != "yes" ]] || exit 2
+  [[ "$failed" != "yes" ]] || {
+    hcloud image add-label -o "$snapshot_id" "test-result=failure"
+    exit 2
+  }
 
   echo "All tests succeeded"
+  hcloud image add-label -o "$snapshot_id" "test-result=success"
 
 )
