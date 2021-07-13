@@ -2,6 +2,8 @@
 
 *This repository provides a set of tools and configuration to simplify testing any version of ncp (for non-docker instances).*
 
+**Disclaimer**: *This project is still in a very early stage and might contain bugs and lack polish. You have been warned :)*
+
 # Requirements
 
 1. Python 3.5+ and virtualenv installed in your system
