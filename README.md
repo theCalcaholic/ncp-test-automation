@@ -7,7 +7,8 @@
 1. Python 3.5+ and virtualenv installed in your system
 2. You need [the geckodriver executable](https://github.com/mozilla/geckodriver/releases) in your system path
 3. You need [the terraform executable (>= 1.0)](https://www.terraform.io/downloads.html) in your system path
-4. You need an account and an API key for any project at [Hetzner Cloud](https://hetzner.cloud)
+4. You need [the hcloud command line tool](https://github.com/hetznercloud/cli) (`apt install hcloud-cli` on Debian based systems)
+5. You need an account and an API key for any project at [Hetzner Cloud](https://hetzner.cloud)
 
 # Setup
 
@@ -22,4 +23,29 @@ hcloud_ncp_playground_api_token = "your-hetzner-cloud-api-token"
 
 # Usage
 
-1. Run the script `ncp-installation-tests.sh` inside the `/bin` directory (more setups will be added in the future).
+## NCP Installation (curl installer) Test
+
+Run the script `ncp-install-test.sh` inside the `/bin` directory.
+You can optionally specify a branch to test, e.g. `./bin/ncp-install-test.sh master` (default is devel).
+
+The script will do the following:
+
+1. Create a server in the hetzner cloud and install ncp on it
+2. Create a snapshot from that server and delete the server
+3. Create a new server from the snapshot and run automated tests against it (during which, ncp will be activated as a side effect).
+4. If the tests succeeded, the snapshot will get a label `test-result=success` and a new snapshot of the activated system will be created
+5. Delete the test server
+
+## NCP Update Test
+
+Run the script `ncp-update-test.sh` inside the `/bin` directory.
+You can optionally specify a **from** and a **to** branch, e.g. `./bin/ncp-update-test.sh master devel`
+(these are the default values and will test the update from the master to the devel branch)
+in order to specify from which version of ncp to start and which to update to.
+
+The script will do the following:
+
+1. If not already present: Get a tested post-activation snapshot of the `from` branch by running `ncp-install-test.sh` for it.
+2. Create a new server from that snapshot and run `ncp-update branch` on it (where 'branch' is the `to` branch).
+3. Run automated tests against that server
+4. Delete the test server
