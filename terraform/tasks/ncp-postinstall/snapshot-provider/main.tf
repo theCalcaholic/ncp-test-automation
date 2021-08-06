@@ -12,7 +12,8 @@ module snapshot-provider {
   admin_ssh_privkey = file(var.admin_ssh_privkey_path)
   post_setup_script = [
     "set -e",
-    "bash -c 'bash <(wget -O - https://raw.githubusercontent.com/nextcloud/nextcloudpi/${var.branch}/install.sh) ${var.branch}'",
+    "export BRANCH=\"${var.branch}\"",
+    "bash -c 'bash <(wget -O - https://raw.githubusercontent.com/nextcloud/nextcloudpi/${var.branch}/install.sh)' | tee /var/log/ncp-install.log",
     "systemctl poweroff"
   ]
 

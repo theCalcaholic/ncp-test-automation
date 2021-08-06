@@ -79,10 +79,17 @@ ensure-postinstall-snapshot() {
 # setup-ssh-port-forwarding server-address
 setup-ssh-port-forwarding() {
   ssh-keygen -f "$HOME/.ssh/known_hosts" -R "${1?}" 2> /dev/null
+  ssh -o "StrictHostKeyChecking=no" root@"${1}" <<EOF || return $?
+    set -e
+    sed -i -e 's/AllowTcpForwarding.*/AllowTcpForwarding yes/' -e 's/PermitOpen.*/PermitOpen any/g' /etc/ssh/sshd_config
+    systemctl restart ssh
+EOF
   ssh -o "StrictHostKeyChecking=no" \
     -M -S "$ssh_control_socket" -fNT \
-    -L 8443:127.0.0.1:443 -L 9443:127.0.0.1:4443 root@"${1}" \
+    -L 8443:127.0.0.1:443 -L 9443:127.0.0.1:4443 root@"${1}" <<EOF
+    tail -f /var/log/ncp.log &
     sleep 600
+EOF
 }
 
 # terminate-ssh-port-forwarding server-address
