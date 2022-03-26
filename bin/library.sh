@@ -71,7 +71,8 @@ ensure-postinstall-snapshot() {
     snapshot_provider_id="$(tf-output "$tf_snapshot_provider" snapshot_provider_id)"
     tf-apply "$tf_snapshot" "$var_file" -var="branch=${branch}" -var="snapshot_provider_id=${snapshot_provider_id}" -var="snapshot_type=ncp-postinstall" -state="${tf_snapshot}/${branch//\//.}.postinstall.tfstate"
     tf-destroy "$tf_snapshot_provider" "$var_file" -var="branch=${branch}" -var="admin_ssh_pubkey_fingerprint=${ssh_pubkey_fprint}"
-
+  else
+    echo "Reusing existing ncp postinstall snapshot"
   fi
   )
 }
@@ -139,10 +140,12 @@ test-ncp-instance() {
   if [[ "${KW_ARGS['-a']:-${KW_ARGS['--activate']}}" == "true" ]]
   then
     python activation_tests.py "${NAMED_ARGS['server-address']}" "${NAMED_ARGS['nc-port']}" "${NAMED_ARGS['webui-port']}" || {
+      echo "======================="
       echo "Activation test failed!"
 
       [[ "${KW_ARGS['-n']}" != "true" ]] || exit 2
-      read -n 1 -rp "Continue anyway? (y|N)" choice
+      echo "You can also connect to the instance with 'ssh -o StrictHostKeyChecking=no root@<server-ip>' for troubleshooting."
+      read -n 1 -rp "Continue anyway (will tear down the server)? (y|N)" choice
       [[ "${choice,,}" == "y" ]] || {
         echo ""
         exit 2

@@ -50,7 +50,17 @@ snapshot_id="$(tf-output "$tf_test_env" snapshot_id)"
 test_server_id="$(tf-output "$tf_test_env" test_server_id)"
 
 setup-ssh-port-forwarding "${ipv4_address}"
-test-ncp-instance -a -f "$snapshot_id" -b "${branch}" "root@${ipv4_address}" "localhost" "8443" "9443"
+test-ncp-instance -a -f "$snapshot_id" -b "${branch}" "root@${ipv4_address}" "localhost" "8443" "9443" || (
+  echo "Here are the last lines of ncp-install.log:"
+  echo "==========================================="
+  ssh -o StrictHostKeyChecking=no "root@${ipv4_address}" tail /var/log/ncp-install.log;
+  echo "==========================================="
+  echo "and ncp.log:"
+  echo "==========================================="
+  ssh -o StrictHostKeyChecking=no "root@${ipv4_address}" tail /var/log/ncp.log;
+  echo "==========================================="
+  exit $?;
+)
 
 ssh "root@${ipv4_address}" 'systemctl poweroff'
 tf-apply "$tf_snapshot" "$var_file" -var="branch=${branch}" -var="snapshot_provider_id=${test_server_id}" -var="snapshot_type=ncp-postactivation" -state="${tf_snapshot}/${branch//\//.}.postactivation.tfstate"

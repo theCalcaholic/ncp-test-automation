@@ -13,6 +13,7 @@ module snapshot-provider {
   post_setup_script = [
     "set -e",
     "export BRANCH=\"${var.branch}\"",
+    "export DBG=x",
     "bash -c 'bash <(wget -O - https://raw.githubusercontent.com/nextcloud/nextcloudpi/${var.branch}/install.sh)' | tee /var/log/ncp-install.log",
     "systemctl poweroff"
   ]
