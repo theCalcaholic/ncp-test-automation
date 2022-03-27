@@ -2,6 +2,8 @@
 BIN_DIR="$(realpath "$(dirname "${BASH_SOURCE[0]}")")"
 PROJECT_ROOT="$(realpath "$BIN_DIR/..")"
 
+SSH_OPTIONS=(-o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null")
+
 ssh_control_socket="/dev/shm/ncp-testing-$RANDOM"
 
 . "${PROJECT_ROOT}/lib/bash-args/parse_args.sh"
@@ -80,13 +82,12 @@ ensure-postinstall-snapshot() {
 # setup-ssh-port-forwarding server-address
 setup-ssh-port-forwarding() {
   ssh-keygen -f "$HOME/.ssh/known_hosts" -R "${1?}" 2> /dev/null
-  ssh -o "StrictHostKeyChecking=no" root@"${1}" <<EOF || return $?
+  ssh "${SSH_OPTIONS[@]}" root@"${1}" <<EOF || return $?
     set -e
     sed -i -e 's/AllowTcpForwarding.*/AllowTcpForwarding yes/' -e 's/PermitOpen.*/PermitOpen any/g' /etc/ssh/sshd_config
     systemctl restart ssh
 EOF
-  ssh -o "StrictHostKeyChecking=no" \
-    -M -S "$ssh_control_socket" -fNT \
+  ssh "${SSH_OPTIONS[@]}" -M -S "$ssh_control_socket" -fNT \
     -L 8443:127.0.0.1:443 -L 9443:127.0.0.1:4443 root@"${1}" <<EOF
     tail -f /var/log/ncp.log &
     sleep 600
@@ -144,7 +145,7 @@ test-ncp-instance() {
       echo "Activation test failed!"
 
       [[ "${KW_ARGS['-n']}" != "true" ]] || exit 2
-      echo "You can also connect to the instance with 'ssh -o StrictHostKeyChecking=no root@<server-ip>' for troubleshooting."
+      echo "You can also connect to the instance with 'ssh root@<server-ip>' for troubleshooting."
       read -n 1 -rp "Continue anyway (will tear down the server)? (y|N)" choice
       [[ "${choice,,}" == "y" ]] || {
         echo ""
@@ -153,10 +154,10 @@ test-ncp-instance() {
       failed=yes
     }
     [[ "$failed" == "yes" ]] || {
-      scp ./test_cfg.txt "${NAMED_ARGS['ssh-connection']}:/root/ncp_test_cfg.txt"
+      scp "${SSH_OPTIONS[@]}" ./test_cfg.txt "${NAMED_ARGS['ssh-connection']}:/root/ncp_test_cfg.txt"
     }
   else
-    scp "${NAMED_ARGS['ssh-connection']}:/root/ncp_test_cfg.txt" ./test_cfg.txt 2> /dev/null || {
+    scp "${SSH_OPTIONS[@]}" "${NAMED_ARGS['ssh-connection']}:/root/ncp_test_cfg.txt" ./test_cfg.txt 2> /dev/null || {
       echo "Could not load test config. Tests will be interactive." >&2
     }
   fi
