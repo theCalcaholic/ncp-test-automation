@@ -3,3 +3,5 @@
 .idea
 .terraform
 *.tfstate*
+*.out
+*.log

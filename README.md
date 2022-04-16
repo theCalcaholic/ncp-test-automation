@@ -20,7 +20,7 @@
 ```hcl
 admin_ssh_privkey_path = "/home/your-user/.ssh/your-ssh-key"
 admin_ssh_pubkey_path = "/home/your-user/.ssh/your-ssh-key.pub"
-hcloud_ncp_playground_api_token = "your-hetzner-cloud-api-token"
+hcloud_api_token = "your-hetzner-cloud-api-token"
 ```
 
 # Usage

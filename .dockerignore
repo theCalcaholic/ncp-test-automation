@@ -1,0 +1,7 @@
+.venv
+**/*.tfvars
+.idea
+.terraform
+**/*.tfstate*
+**/*.out
+**/*.log

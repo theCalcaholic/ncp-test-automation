@@ -1,0 +1,12 @@
+name: 'NCP Installation Test'
+description: 'Install and test NCP on a fresh system in the Hetzner cloud'
+inputs:
+  version:
+    description: "git ref, tag or branch to test"
+    required: true
+runs:
+  using: 'docker'
+  image: '../Dockerfile'
+  args:
+    - './bin/ncp-install-test.sh'
+    - "${{ inputs.version }}"

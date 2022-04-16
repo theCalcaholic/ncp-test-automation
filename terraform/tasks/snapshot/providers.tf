@@ -7,6 +7,6 @@ terraform {
 }
 
 provider "hcloud" {
-  token = var.hcloud_ncp_playground_api_token
+  token = var.hcloud_api_token
 }
 
