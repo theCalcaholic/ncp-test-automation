@@ -21,7 +21,7 @@ jobs:
         run: docker build . --tag "$IMAGE_NAME"
 
       - name: Login to docker registry
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u $ --password-stdin
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USER }}" --password-stdin
       - name: Push image
         run: |
           IMAGE="$(echo "ghcr.io/${{ github.repository_owner }}/${IMAGE_NAME}" | tr '[A-Z]' '[a-z]')"
