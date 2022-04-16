@@ -26,6 +26,7 @@ done
 
 echo "Setting up project"
 
+hcloud ssh-key describe root > /dev/null 2>&1 && hcloud ssh-key delete root
 tf-apply "$tf_project_setup" "$var_file"
 ssh_pubkey_fprint="$(tf-output "$tf_project_setup" admin_ssh_pubkey_fingerprint)"
 
@@ -67,8 +68,14 @@ test-ncp-instance -a -f "$snapshot_id" -b "${branch}" "root@${ipv4_address}" "lo
   }
 
   echo "WARNING! The integration tests have failed!"
-  read -n 1 -rp "Do you want to retry after a reboot? (y|N)" choice
-  echo ""
+
+  if [[ $- == *i* ]]
+  then
+    read -n 1 -rp "Do you want to retry after a reboot? (y|N)" choice
+    echo ""
+  else
+    choice=n
+  fi
   if [[ "${choice,,}" == "y" ]]
   then
   # shellcheck disable=SC2029

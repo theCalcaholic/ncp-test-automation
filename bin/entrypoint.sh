@@ -1,5 +1,5 @@
 #!/bin/bash
-set -x
+set -e
 
 mkdir -p ~/.ssh
 SSH_PRIVATE_KEY_PATH="$(echo ~/.ssh/automation_ssh_key)"
@@ -13,7 +13,7 @@ cat <<EOF > /ncp-test-automation/terraform/terraform.tfvars
 admin_ssh_privkey_path = "$SSH_PRIVATE_KEY_PATH"
 admin_ssh_pubkey_path = "$SSH_PUBLIC_KEY_PATH"
 admin_ssh_pubkey = "$SSH_PUBLIC_KEY"
-hcloud_api_token = "$HCLOUD_API_TOKEN"
+hcloud_api_token = "$HCLOUD_TOKEN"
 EOF
 
 bash "$@"

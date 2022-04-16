@@ -2,9 +2,12 @@
 BIN_DIR="$(realpath "$(dirname "${BASH_SOURCE[0]}")")"
 PROJECT_ROOT="$(realpath "$BIN_DIR/..")"
 
-SSH_OPTIONS=(-o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null")
-
 ssh_control_socket="/dev/shm/ncp-testing-$RANDOM"
+
+SSH_OPTIONS=(-o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null")
+SSH_SOCKET_OPTIONS=()
+[[ -n "$DOCKER" ]] || SSH_SOCKET_OPTIONS+=(-S "$ssh_control_socket")
+
 
 . "${PROJECT_ROOT}/lib/bash-args/parse_args.sh"
 
@@ -81,13 +84,13 @@ ensure-postinstall-snapshot() {
 
 # setup-ssh-port-forwarding server-address
 setup-ssh-port-forwarding() {
-  ssh-keygen -f "$HOME/.ssh/known_hosts" -R "${1?}" 2> /dev/null
+  [[ -f "$HOME/.ssh/known_hosts" ]] && ssh-keygen -f "$HOME/.ssh/known_hosts" -R "${1?}" 2> /dev/null
   ssh "${SSH_OPTIONS[@]}" root@"${1}" <<EOF || return $?
     set -e
     sed -i -e 's/AllowTcpForwarding.*/AllowTcpForwarding yes/' -e 's/PermitOpen.*/PermitOpen any/g' /etc/ssh/sshd_config
     systemctl restart ssh
 EOF
-  ssh "${SSH_OPTIONS[@]}" -M -S "$ssh_control_socket" -fNT \
+  ssh "${SSH_SOCKET_OPTIONS[@]}" "${SSH_OPTIONS[@]}" -M -fNT \
     -L 8443:127.0.0.1:443 -L 9443:127.0.0.1:4443 root@"${1}" <<EOF
     tail -f /var/log/ncp.log &
     sleep 600
@@ -96,7 +99,12 @@ EOF
 
 # terminate-ssh-port-forwarding server-address
 terminate-ssh-port-forwarding() {
+  if [[ -z "$DOCKER" ]]
+  then
     ssh -S "$ssh_control_socket" -O exit "root@${1:-stub}"
+  else
+    pkill ssh || true
+  fi
 }
 
 # test-ncp-instance ssh-connection server-address nc-port webui-port [--branch] [--activate] [--flag-snapshot snapshot-id]
@@ -129,24 +137,33 @@ test-ncp-instance() {
 
   cd "${NCP_AUTOMATION_DIR?}"
 
-  virtualenv "$NCP_AUTOMATION_DIR/venv"
-  . "$NCP_AUTOMATION_DIR/venv/bin/activate"
+  [[ -n "$DOCKER" ]] || {
+    virtualenv "$NCP_AUTOMATION_DIR/venv"
+    . "$NCP_AUTOMATION_DIR/venv/bin/activate"
+  }
   pip install selenium
   git clone https://github.com/nextcloud/nextcloudpi.git
   cd nextcloudpi/tests
   git checkout "${KW_ARGS['-b']:-master}"
 
   failed=no
+  test_args=()
+  [[ -z "$DOCKER" ]] || test_args+=("--no-gui")
 
   if [[ "${KW_ARGS['-a']:-${KW_ARGS['--activate']}}" == "true" ]]
   then
-    python activation_tests.py "${NAMED_ARGS['server-address']}" "${NAMED_ARGS['nc-port']}" "${NAMED_ARGS['webui-port']}" || {
+    python activation_tests.py "${test_args[@]}" "${NAMED_ARGS['server-address']}" "${NAMED_ARGS['nc-port']}" "${NAMED_ARGS['webui-port']}" || {
       echo "======================="
       echo "Activation test failed!"
 
       [[ "${KW_ARGS['-n']}" != "true" ]] || exit 2
       echo "You can also connect to the instance with 'ssh root@<server-ip>' for troubleshooting."
-      read -n 1 -rp "Continue anyway (will tear down the server)? (y|N)" choice
+      if [[ $- == *i* ]]
+      then
+        read -n 1 -rp "Continue anyway (will tear down the server)? (y|N)" choice
+      else
+        choice=n
+      fi
       [[ "${choice,,}" == "y" ]] || {
         echo ""
         exit 2
@@ -166,7 +183,7 @@ test-ncp-instance() {
     echo "System test failed!"
     failed=yes
   }
-  python nextcloud_tests.py "${NAMED_ARGS['server-address']}" "${NAMED_ARGS['nc-port']}" "${NAMED_ARGS['webui-port']}" || {
+  python nextcloud_tests.py "${test_args[@]}" "${NAMED_ARGS['server-address']}" "${NAMED_ARGS['nc-port']}" "${NAMED_ARGS['webui-port']}" || {
     echo "Nextcloud test failed!"
     failed=yes
   }
