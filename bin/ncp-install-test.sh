@@ -2,7 +2,7 @@
 
 branch="${1:-devel}"
 
-set -e
+set -ex
 
 . ./library.sh
 
