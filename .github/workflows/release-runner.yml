@@ -25,6 +25,8 @@ jobs:
       - name: Push image
         run: |
           IMAGE="$(echo "ghcr.io/${{ github.repository_owner }}/${IMAGE_NAME}" | tr '[A-Z]' '[a-z]')"
-          docker tag "${IMAGE_NAME}" "${IMAGE}:${{ github.run_id }}"
-          docker tag "${IMAGE_NAME}" "${IMAGE}:${{ github.event.inputs.tag }}"
-          docker push "${IMAGE}"
+          for tag in "${{ github.run_id }}" "${{ github.event.inputs.tag }}"
+          do
+            docker tag "${IMAGE_NAME}" "${IMAGE}:${tag}"
+            docker push "${IMAGE}:${tag}"
+          done
