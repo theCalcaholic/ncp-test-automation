@@ -7,6 +7,7 @@ ssh_control_socket="/dev/shm/ncp-testing-$RANDOM"
 SSH_OPTIONS=(-o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null")
 SSH_SOCKET_OPTIONS=()
 [[ -n "$DOCKER" ]] || SSH_SOCKET_OPTIONS+=(-S "$ssh_control_socket")
+[[ -z "$DOCKER" ]] || SSH_OPTIONS+=(-i "${SSH_PRIVATE_KEY_PATH?}")
 
 
 . "${PROJECT_ROOT}/lib/bash-args/parse_args.sh"
