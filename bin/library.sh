@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+set -x
+echo "${BASH_SOURCE[*]}"
 BIN_DIR="$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
 PROJECT_ROOT="$(realpath "$BIN_DIR/..")"
 
