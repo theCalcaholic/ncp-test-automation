@@ -154,6 +154,7 @@ test-ncp-instance() {
   if [[ "${KW_ARGS['-a']:-${KW_ARGS['--activate']}}" == "true" ]]
   then
     python activation_tests.py "${test_args[@]}" "${NAMED_ARGS['server-address']}" "${NAMED_ARGS['nc-port']}" "${NAMED_ARGS['webui-port']}" || {
+      tail -n 20 geckodriver.log >&2 || true
       echo "======================="
       echo "Activation test failed!"
 
