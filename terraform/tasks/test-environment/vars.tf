@@ -18,3 +18,8 @@ variable "branch" {
 variable "snapshot_type" {
   type = string
 }
+
+variable "uid_suffix" {
+  type = string
+  default = ""
+}

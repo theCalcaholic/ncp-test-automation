@@ -4,31 +4,16 @@ branch="${1:-devel}"
 
 set -ex
 
-. ./library.sh
-
-var_file="${PROJECT_ROOT}/terraform/terraform.tfvars"
-tf_tasks_root="${PROJECT_ROOT}/terraform/tasks"
-tf_project_setup="${tf_tasks_root}/project-setup"
-tf_snapshot="${tf_tasks_root}/snapshot"
-tf_snapshot_provider="${tf_tasks_root}/ncp-postinstall/snapshot-provider"
-tf_test_env="${tf_tasks_root}/test-environment"
+source "$(cd "${BASHSOURCE[0]}"; pwd)/library.sh"
 
 echo "Initialize Terraform"
-for path in "$tf_project_setup" "$tf_snapshot" "$tf_snapshot_provider" "$tf_test_env"
-do
-  echo "Initializing $(basename "$path")..."
-  (
-  cd "$path" || exit 1
-  terraform init
-  )
-  echo "done"
-done
+for path in "$TF_PROJECT_SETUP" "$TF_SNAPSHOT" "$TF_SNAPSHOT_PROVIDER" "$TF_TEST_ENV"
+do tf-init "$path"; done
 
 echo "Setting up project"
-
-hcloud ssh-key describe root > /dev/null 2>&1 && hcloud ssh-key delete root
-tf-apply "$tf_project_setup" "$var_file"
-ssh_pubkey_fprint="$(tf-output "$tf_project_setup" admin_ssh_pubkey_fingerprint)"
+hcloud_clear_root_key
+tf-apply "$TF_PROJECT_SETUP" "$TF_VAR_FILE"
+ssh_pubkey_fprint="$(tf-output "$TF_PROJECT_SETUP" admin_ssh_pubkey_fingerprint)"
 
 ensure-postinstall-snapshot "$ssh_pubkey_fprint" "$branch" || {
   echo "Could not create ncp postinstall snapshot (and none was present)"
@@ -39,16 +24,16 @@ cleanup() {
   (
     set +e
     terminate-ssh-port-forwarding "${ipv4_address}"
-    tf-destroy "$tf_test_env" "$var_file" -var="snapshot_type=ncp-postinstall" -var="branch=${branch}" -var="admin_ssh_pubkey_fingerprint=${ssh_pubkey_fprint}"
+    tf-destroy "$TF_TEST_ENV" "$TF_VAR_FILE" -var="snapshot_type=ncp-postinstall" -var="branch=${branch}" -var="admin_ssh_pubkey_fingerprint=${ssh_pubkey_fprint}"
   )
   exit "$1"
 }
 
 trap "cleanup \$?; trap - EXIT;" EXIT 1 2
-tf-apply "$tf_test_env" "$var_file" -var="snapshot_type=ncp-postinstall" -var="branch=${branch}" -var="admin_ssh_pubkey_fingerprint=${ssh_pubkey_fprint}"
-ipv4_address="$(tf-output "$tf_test_env" test_server_ipv4)"
-snapshot_id="$(tf-output "$tf_test_env" snapshot_id)"
-test_server_id="$(tf-output "$tf_test_env" test_server_id)"
+tf-apply "$TF_TEST_ENV" "$TF_VAR_FILE" -var="snapshot_type=ncp-postinstall" -var="branch=${branch}" -var="admin_ssh_pubkey_fingerprint=${ssh_pubkey_fprint}"
+ipv4_address="$(tf-output "$TF_TEST_ENV" test_server_ipv4)"
+snapshot_id="$(tf-output "$TF_TEST_ENV" snapshot_id)"
+test_server_id="$(tf-output "$TF_TEST_ENV" test_server_id)"
 
 setup-ssh-port-forwarding "${ipv4_address}"
 test_result=success
@@ -105,6 +90,8 @@ ssh "${SSH_OPTIONS[@]}" "root@${ipv4_address}" <<EOF
 systemctl stop mariadb
 systemctl poweroff
 EOF
-tf-apply "$tf_snapshot" "$var_file" -var="branch=${branch}" -var="snapshot_provider_id=${test_server_id}" -var="snapshot_type=ncp-postactivation" -state="${tf_snapshot}/${branch//\//.}.postactivation.tfstate"
-snapshot_id="$(tf-output "$tf_snapshot" -state="${tf_snapshot}/${branch//\//.}.postactivation.tfstate" snapshot_id)"
+tf-apply "$TF_SNAPSHOT" "$TF_VAR_FILE" -var="branch=${branch}" -var="snapshot_provider_id=${test_server_id}" -var="snapshot_type=ncp-postactivation" -state="${TF_SNAPSHOT}/${branch//\//.}.postactivation.tfstate"
+snapshot_id="$(tf-output "$TF_SNAPSHOT" -state="${TF_SNAPSHOT}/${branch//\//.}.postactivation.tfstate" snapshot_id)"
 hcloud image add-label -o "$snapshot_id" "test-result=${test_result}"
+
+[[ "$test_result" == "success" ]]

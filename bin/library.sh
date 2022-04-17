@@ -9,8 +9,28 @@ SSH_SOCKET_OPTIONS=()
 [[ -n "$DOCKER" ]] || SSH_SOCKET_OPTIONS+=(-S "$ssh_control_socket")
 [[ -z "$DOCKER" ]] || SSH_OPTIONS+=(-i "${SSH_PRIVATE_KEY_PATH?}")
 
+export TF_VAR_FILE="${PROJECT_ROOT}/terraform/terraform.tfvars"
+export TF_TASKS_ROOT="${PROJECT_ROOT}/terraform/tasks"
+export TF_PROJECT_SETUP="${TF_TASKS_ROOT}/project-setup"
+export TF_SNAPSHOT="${TF_TASKS_ROOT}/snapshot"
+export TF_SNAPSHOT_PROVIDER="${TF_TASKS_ROOT}/ncp-postinstall/snapshot-provider"
+export TF_TEST_ENV="${TF_TASKS_ROOT}/test-environment"
+
 
 . "${PROJECT_ROOT}/lib/bash-args/parse_args.sh"
+
+hcloud_clear_root_key() {
+  hcloud ssh-key describe root > /dev/null 2>&1 && hcloud ssh-key delete root
+}
+
+tf-init() {
+  echo "Initializing $(basename "${1?}")..."
+  (
+  cd "$1" || exit 1
+  terraform init
+  )
+  echo "done"
+}
 
 # tf-apply path var-file args
 tf-apply() {
@@ -61,9 +81,9 @@ tf-output() {
 # ensure-postinstall-snapshot ssh_pubkey_fprint [branch [--force]]
 ensure-postinstall-snapshot() {
 
-  local var_file="${PROJECT_ROOT}/terraform/terraform.tfvars"
-  local tf_snapshot="${PROJECT_ROOT}/terraform/tasks/snapshot"
-  local tf_snapshot_provider="${PROJECT_ROOT}/terraform/tasks/ncp-postinstall/snapshot-provider"
+  local TF_VAR_FILE="${PROJECT_ROOT}/terraform/terraform.tfvars"
+  local TF_SNAPSHOT="${PROJECT_ROOT}/terraform/tasks/snapshot"
+  local TF_SNAPSHOT_PROVIDER="${PROJECT_ROOT}/terraform/tasks/ncp-postinstall/snapshot-provider"
   local ssh_pubkey_fprint=${1}
   local branch="${2:-devel}"
 
@@ -71,12 +91,12 @@ ensure-postinstall-snapshot() {
   set -e
   if [[ " $* " =~ .*" --force ".* ]] || ! hcloud image list -t snapshot -l "type=ncp-postinstall,branch=${branch//\//-}" -o noheader -o columns=created | grep -qv -e day  -e week -e year -e month
   then
-    trap 'tf-destroy "$tf_snapshot_provider" "$var_file" -var="branch=${branch}" -var="admin_ssh_pubkey_fingerprint=${ssh_pubkey_fprint}"' EXIT
+    trap 'tf-destroy "$TF_SNAPSHOT_PROVIDER" "$TF_VAR_FILE" -var="branch=${branch}" -var="admin_ssh_pubkey_fingerprint=${ssh_pubkey_fprint}"' EXIT
     echo "Creating ncp postinstall snapshot"
-    tf-apply "$tf_snapshot_provider" "$var_file" -var="branch=${branch}" -var="admin_ssh_pubkey_fingerprint=${ssh_pubkey_fprint}"
-    snapshot_provider_id="$(tf-output "$tf_snapshot_provider" snapshot_provider_id)"
-    tf-apply "$tf_snapshot" "$var_file" -var="branch=${branch}" -var="snapshot_provider_id=${snapshot_provider_id}" -var="snapshot_type=ncp-postinstall" -state="${tf_snapshot}/${branch//\//.}.postinstall.tfstate"
-    tf-destroy "$tf_snapshot_provider" "$var_file" -var="branch=${branch}" -var="admin_ssh_pubkey_fingerprint=${ssh_pubkey_fprint}"
+    tf-apply "$TF_SNAPSHOT_PROVIDER" "$TF_VAR_FILE" -var="branch=${branch}" -var="admin_ssh_pubkey_fingerprint=${ssh_pubkey_fprint}"
+    snapshot_provider_id="$(tf-output "$TF_SNAPSHOT_PROVIDER" snapshot_provider_id)"
+    tf-apply "$TF_SNAPSHOT" "$TF_VAR_FILE" -var="branch=${branch}" -var="snapshot_provider_id=${snapshot_provider_id}" -var="snapshot_type=ncp-postinstall" -state="${TF_SNAPSHOT}/${branch//\//.}.postinstall.tfstate"
+    tf-destroy "$TF_SNAPSHOT_PROVIDER" "$TF_VAR_FILE" -var="branch=${branch}" -var="admin_ssh_pubkey_fingerprint=${ssh_pubkey_fprint}"
   else
     echo "Reusing existing ncp postinstall snapshot"
   fi
@@ -181,7 +201,9 @@ test-ncp-instance() {
     }
   fi
 
-  python system_tests.py "${NAMED_ARGS['ssh-connection']}" || {
+  sys_test_args=()
+  [[ -z "$DOCKER" ]] || sys_test_args+=("--no-ping")
+  python system_tests.py "${sys_test_args[@]}" "${NAMED_ARGS['ssh-connection']}" || {
     echo "System test failed!"
     failed=yes
   }

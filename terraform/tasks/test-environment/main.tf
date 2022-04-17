@@ -12,7 +12,7 @@ module server {
   ssh_public_keys = [data.hcloud_ssh_key.admin_key.id]
   disk-image = data.hcloud_image.ncp_image.id
 
-  name = "ncp-test-server"
+  name = "ncp-test-server${var.uid_suffix}"
 
   admin_ssh_privkey = file(var.admin_ssh_privkey_path)
 

@@ -14,6 +14,7 @@ admin_ssh_privkey_path = "$SSH_PRIVATE_KEY_PATH"
 admin_ssh_pubkey_path = "$SSH_PUBLIC_KEY_PATH"
 admin_ssh_pubkey = "$SSH_PUBLIC_KEY"
 hcloud_api_token = "$HCLOUD_TOKEN"
+uid_suffix = "${UID:+-$UID}"
 EOF
 
 bash "$@"
