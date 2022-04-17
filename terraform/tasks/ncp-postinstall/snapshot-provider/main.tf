@@ -9,7 +9,7 @@ module snapshot-provider {
 
   name = "ncp-postinstall-snapshot-provider"
 
-  labels = var.uid_suffix == "" ? {} : {cicd = var.uid_suffix}
+  labels = var.uid_suffix == "" ? {} : {ci = trimprefix(var.uid_suffix, "-")}
 
   admin_ssh_privkey = file(var.admin_ssh_privkey_path)
   post_setup_script = [
