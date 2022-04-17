@@ -81,15 +81,12 @@ tf-output() {
 # ensure-postinstall-snapshot ssh_pubkey_fprint [branch [--force]]
 ensure-postinstall-snapshot() {
 
-  local TF_VAR_FILE="${PROJECT_ROOT}/terraform/terraform.tfvars"
-  local TF_SNAPSHOT="${PROJECT_ROOT}/terraform/tasks/snapshot"
-  local TF_SNAPSHOT_PROVIDER="${PROJECT_ROOT}/terraform/tasks/ncp-postinstall/snapshot-provider"
   local ssh_pubkey_fprint=${1}
   local branch="${2:-devel}"
 
   (
   set -e
-  if [[ " $* " =~ .*" --force ".* ]] || ! hcloud image list -t snapshot -l "type=ncp-postinstall,branch=${branch//\//-}" -o noheader -o columns=created | grep -qv -e day  -e week -e year -e month
+  if [[ " $* " =~ .*" --force ".* ]] || ! hcloud image list -t snapshot -l "type=ncp-postinstall,branch=${branch//\//-},cicd=${UID:+-$UID}" -o noheader -o columns=created | grep -qv -e day  -e week -e year -e month
   then
     trap 'tf-destroy "$TF_SNAPSHOT_PROVIDER" "$TF_VAR_FILE" -var="branch=${branch}" -var="admin_ssh_pubkey_fingerprint=${ssh_pubkey_fprint}"' EXIT
     echo "Creating ncp postinstall snapshot"
