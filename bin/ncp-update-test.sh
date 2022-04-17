@@ -20,7 +20,7 @@ done
 
 echo "Setting up project"
 
-hcloud_clear_root_key
+hcloud-clear-root-key
 tf-apply "$tf_project_setup" "$var_file"
 ssh_pubkey_fprint="$(tf-output "$tf_project_setup" admin_ssh_pubkey_fingerprint)"
 

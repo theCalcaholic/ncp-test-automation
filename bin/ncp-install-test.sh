@@ -11,7 +11,7 @@ for path in "$TF_PROJECT_SETUP" "$TF_SNAPSHOT" "$TF_SNAPSHOT_PROVIDER" "$TF_TEST
 do tf-init "$path"; done
 
 echo "Setting up project"
-hcloud_clear_root_key
+hcloud-clear-root-key
 tf-apply "$TF_PROJECT_SETUP" "$TF_VAR_FILE"
 ssh_pubkey_fprint="$(tf-output "$TF_PROJECT_SETUP" admin_ssh_pubkey_fingerprint)"
 

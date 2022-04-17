@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
-set -x
-echo "${BASH_SOURCE[*]}"
 BIN_DIR="$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
 PROJECT_ROOT="$(realpath "$BIN_DIR/..")"
 
@@ -21,8 +19,11 @@ export TF_TEST_ENV="${TF_TASKS_ROOT}/test-environment"
 
 . "${PROJECT_ROOT}/lib/bash-args/parse_args.sh"
 
-hcloud_clear_root_key() {
-  hcloud ssh-key describe root > /dev/null 2>&1 && hcloud ssh-key delete root
+hcloud-clear-root-key() {
+  if hcloud ssh-key describe "root${UID:+-$UID}" > /dev/null 2>&1
+  then
+    hcloud ssh-key delete "root${UID:+-$UID}"
+  fi
 }
 
 tf-init() {
