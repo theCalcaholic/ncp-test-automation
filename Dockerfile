@@ -20,10 +20,10 @@ RUN wget -qO - https://releases.hashicorp.com/terraform/1.1.8/terraform_1.1.8_li
     && chmod +x /usr/local/bin/terraform
 RUN wget -qO - https://github.com/hetznercloud/cli/releases/download/v1.29.4/hcloud-linux-amd64.tar.gz | tar xz \
     && chmod +x /usr/local/bin/hcloud
-RUN addgroup ncp && adduser -G ncp -D ncp
-COPY --chown=ncp:ncp bin /ncp-test-automation/bin
-COPY --chown=ncp:ncp terraform /ncp-test-automation/terraform
-COPY --chown=ncp:ncp lib /ncp-test-automation/lib
+RUN addgroup github && adduser -G github -D github
+COPY --chown=github:github bin /ncp-test-automation/bin
+COPY --chown=github:github terraform /ncp-test-automation/terraform
+COPY --chown=github:github lib /ncp-test-automation/lib
 
 WORKDIR /ncp-test-automation/bin
 ENTRYPOINT ["/bin/bash", "entrypoint.sh"]
