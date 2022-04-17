@@ -7,7 +7,7 @@ ssh_control_socket="/dev/shm/ncp-testing-$RANDOM"
 SSH_OPTIONS=(-o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null")
 SSH_SOCKET_OPTIONS=()
 [[ -n "$DOCKER" ]] || SSH_SOCKET_OPTIONS+=(-S "$ssh_control_socket")
-[[ -z "$DOCKER" ]] || SSH_OPTIONS+=(-i "${SSH_PRIVATE_KEY_PATH?}")
+[[ -z "$DOCKER" ]] || [[ -z "$SSH_PRIVATE_KEY_PATH" ]] || SSH_OPTIONS+=(-i "${SSH_PRIVATE_KEY_PATH}")
 
 export TF_VAR_FILE="${PROJECT_ROOT}/terraform/terraform.tfvars"
 export TF_TASKS_ROOT="${PROJECT_ROOT}/terraform/tasks"
