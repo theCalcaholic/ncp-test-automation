@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-BIN_DIR="$(realpath "$(dirname "${BASH_SOURCE[0]}")")"
+BIN_DIR="$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
 PROJECT_ROOT="$(realpath "$BIN_DIR/..")"
 
 ssh_control_socket="/dev/shm/ncp-testing-${UID:-$RANDOM}"
