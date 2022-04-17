@@ -7,7 +7,7 @@ ssh_control_socket="/dev/shm/ncp-testing-$RANDOM"
 SSH_OPTIONS=(-o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null")
 SSH_SOCKET_OPTIONS=()
 [[ -n "$DOCKER" ]] || SSH_SOCKET_OPTIONS+=(-S "$ssh_control_socket")
-[[ -z "$DOCKER" ]] || [[ -z "$SSH_PRIVATE_KEY_PATH" ]] || SSH_OPTIONS+=(-i "${SSH_PRIVATE_KEY_PATH}")
+[[ -z "$SSH_PRIVATE_KEY_PATH" ]] || SSH_OPTIONS+=(-i "${SSH_PRIVATE_KEY_PATH}")
 
 export TF_VAR_FILE="${PROJECT_ROOT}/terraform/terraform.tfvars"
 export TF_TASKS_ROOT="${PROJECT_ROOT}/terraform/tasks"
@@ -166,7 +166,7 @@ test-ncp-instance() {
 
   failed=no
   test_args=()
-  [[ -z "$DOCKER" ]] || test_args+=("--no-gui")
+  [[ -n "$DISPLAY" ]] || test_args+=("--no-gui")
 
   if [[ "${KW_ARGS['-a']:-${KW_ARGS['--activate']}}" == "true" ]]
   then
@@ -199,7 +199,7 @@ test-ncp-instance() {
   fi
 
   sys_test_args=()
-  [[ -z "$DOCKER" ]] || sys_test_args+=("--no-ping")
+  [[ "$CI" == "true" ]] && sys_test_args+=("--no-ping")
   python system_tests.py "${sys_test_args[@]}" "${NAMED_ARGS['ssh-connection']}" || {
     echo "System test failed!"
     failed=yes
