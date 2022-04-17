@@ -14,3 +14,8 @@ variable "admin_ssh_privkey_path" {
 variable "branch" {
   default = "devel"
 }
+
+variable "uid_suffix" {
+  type = string
+  default = ""
+}

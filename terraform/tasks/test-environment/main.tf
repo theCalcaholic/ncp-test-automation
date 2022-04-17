@@ -14,6 +14,8 @@ module server {
 
   name = "ncp-test-server${var.uid_suffix}"
 
+  lables = var.uid_suffix == "" ? {} : {cicd = var.uid_suffix}
+
   admin_ssh_privkey = file(var.admin_ssh_privkey_path)
 
 }

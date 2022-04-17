@@ -2,7 +2,7 @@
 BIN_DIR="$(realpath "$(dirname "${BASH_SOURCE[0]}")")"
 PROJECT_ROOT="$(realpath "$BIN_DIR/..")"
 
-ssh_control_socket="/dev/shm/ncp-testing-$RANDOM"
+ssh_control_socket="/dev/shm/ncp-testing-${UID:-$RANDOM}"
 
 SSH_OPTIONS=(-o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null")
 SSH_SOCKET_OPTIONS=()

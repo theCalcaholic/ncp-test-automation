@@ -5,6 +5,8 @@ resource "hcloud_server" "server" {
   location = var.location
   ssh_keys = var.ssh_public_keys
 
+  labels = var.labels
+
   provisioner "remote-exec" {
     inline = var.post_setup_script
 

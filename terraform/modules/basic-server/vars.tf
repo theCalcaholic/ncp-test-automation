@@ -26,3 +26,8 @@ variable "admin_ssh_privkey" {
   type = string
   sensitive = true
 }
+
+variable "labels" {
+    type = map(string)
+  default = {}
+}
