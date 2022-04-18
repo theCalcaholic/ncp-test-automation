@@ -22,7 +22,9 @@ export TF_TEST_ENV="${TF_TASKS_ROOT}/test-environment"
 hcloud-clear-root-key() {
   if hcloud ssh-key describe "root${UID:+-$UID}" > /dev/null 2>&1
   then
+    echo "Deleting ssh key 'root${UID:+-UID}'..."
     hcloud ssh-key delete "root${UID:+-$UID}"
+    echo "done."
   fi
 }
 
