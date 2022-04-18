@@ -11,6 +11,7 @@ module server {
   source = "../../modules/basic-server"
   ssh_public_keys = [data.hcloud_ssh_key.admin_key.id]
   disk-image = data.hcloud_image.ncp_image.id
+  server_type = var.server_type
 
   name = "ncp-test-server${var.uid_suffix}"
 
