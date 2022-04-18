@@ -7,7 +7,7 @@ module snapshot-provider {
   ssh_public_keys = [data.hcloud_ssh_key.admin_key.id]
   disk-image = "debian-11"
 
-  name = "ncp-postinstall-snapshot-provider"
+  name = "ncp-postinstall-snapshot-provider${var.uid_suffix}"
 
   labels = var.uid_suffix == "" ? {} : {ci = trimprefix(var.uid_suffix, "-")}
 
