@@ -5,8 +5,8 @@ cd "$(dirname "${BASH_SOURCE[0]}")"
 export HOME=/root
 
 mkdir -p ~/.ssh
-export SSH_PRIVATE_KEY_PATH="$HOME/.ssh/automation_ssh_key"
-export SSH_PUBLIC_KEY_PATH="$HOME/.ssh/automation_ssh_key.pub"
+export SSH_PRIVATE_KEY_PATH="/github/workspace/.ssh/automation_ssh_key"
+export SSH_PUBLIC_KEY_PATH="/github/workspace/.ssh/automation_ssh_key.pub"
 [[ -z "$SSH_PRIVATE_KEY" ]] || {
   echo "$SSH_PRIVATE_KEY" > "$SSH_PRIVATE_KEY_PATH"
   chmod 0600 "$SSH_PRIVATE_KEY_PATH"
