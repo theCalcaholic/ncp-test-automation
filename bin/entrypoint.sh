@@ -4,9 +4,11 @@ set -e
 mkdir -p ~/.ssh
 export SSH_PRIVATE_KEY_PATH="$HOME/.ssh/automation_ssh_key"
 export SSH_PUBLIC_KEY_PATH="$HOME/.ssh/automation_ssh_key.pub"
-echo "$SSH_PRIVATE_KEY" > "$SSH_PRIVATE_KEY_PATH"
-chmod 0600 "$SSH_PRIVATE_KEY_PATH"
-echo "$SSH_PUBLIC_KEY" > "$SSH_PUBLIC_KEY_PATH"
+[[ -z "$SSH_PRIVATE_KEY" ]] || {
+  echo "$SSH_PRIVATE_KEY" > "$SSH_PRIVATE_KEY_PATH"
+  chmod 0600 "$SSH_PRIVATE_KEY_PATH"
+}
+[[ -z "$SSH_PUBLIC_KEY" ]] || echo "$SSH_PUBLIC_KEY" > "$SSH_PUBLIC_KEY_PATH"
 eval "$(ssh-agent)"
 ssh-add "$SSH_PRIVATE_KEY_PATH"
 cat <<EOF > /ncp-test-automation/terraform/terraform.tfvars
