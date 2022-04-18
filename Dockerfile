@@ -26,4 +26,4 @@ COPY --chown=github:github terraform /ncp-test-automation/terraform
 COPY --chown=github:github lib /ncp-test-automation/lib
 
 WORKDIR /ncp-test-automation/bin
-ENTRYPOINT ["/bin/bash", "entrypoint.sh"]
+ENTRYPOINT ["/bin/bash", "/ncp-test-automation/bin/entrypoint.sh"]

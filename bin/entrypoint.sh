@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+cd "$(dirname "${BASH_SOURCE[0]}")"
+
 mkdir -p ~/.ssh
 export SSH_PRIVATE_KEY_PATH="$HOME/.ssh/automation_ssh_key"
 export SSH_PUBLIC_KEY_PATH="$HOME/.ssh/automation_ssh_key.pub"
@@ -22,5 +24,3 @@ uid_suffix = "${UID:+-$UID}"
 EOF
 
 bash "$@"
-
-}
