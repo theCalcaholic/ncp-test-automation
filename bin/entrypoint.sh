@@ -2,6 +2,7 @@
 set -e
 
 cd "$(dirname "${BASH_SOURCE[0]}")"
+export HOME=/root
 
 mkdir -p ~/.ssh
 export SSH_PRIVATE_KEY_PATH="$HOME/.ssh/automation_ssh_key"
