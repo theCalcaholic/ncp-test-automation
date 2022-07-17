@@ -31,7 +31,7 @@ hcloud-clear-root-key() {
 tf-init() {
   echo "Initializing $(basename "${1?}")..."
   (
-  cd "$1" || exit 1
+  cd "$1" || return 1
   terraform init
   )
   echo "done"
@@ -46,11 +46,11 @@ tf-apply() {
   args=("$@")
 
   (
-  cd "$tf_path" || exit 1
+  cd "$tf_path" || return 1
   rc=0
   terraform apply -auto-approve -var-file="$tf_varfile" "${args[@]}" || rc=$?
   [[ $rc -eq 0 ]] || terraform destroy -auto-approve -var-file="$tf_varfile" "${args[@]}"
-  exit $rc
+  return $rc
   )
 }
 
@@ -64,7 +64,7 @@ tf-destroy() {
 
   (
   set -e
-  cd "$tf_path" || exit 1
+  cd "$tf_path" || return 1
   terraform destroy -auto-approve -var-file="$tf_varfile" "${args[@]}"
   )
 }
@@ -78,7 +78,7 @@ tf-output() {
 
   (
   set -e
-  cd "$tf_path" || exit 1
+  cd "$tf_path" || return 1
   terraform output "${args[@]}"
   )
 }
@@ -147,7 +147,7 @@ test-ncp-instance() {
   USAGE['-n']="Omit all interactive dialogs (and assume default answer)"
   USAGE['-b']="Specify the branch to checkout for the ncp integration tests (default: master)"
 
-  parse_args "$@" || exit $?
+  parse_args "$@" || return $?
 
   snapshot_id="${KW_ARGS['--flag-snapshot']:-${KW_ARGS['-f']}}"
 
@@ -180,7 +180,7 @@ test-ncp-instance() {
       echo "======================="
       echo "Activation test failed!"
 
-      [[ "${KW_ARGS['-n']}" != "true" ]] || exit 2
+      [[ "${KW_ARGS['-n']}" != "true" ]] || return 2
       echo "You can also connect to the instance with 'ssh root@<server-ip>' for troubleshooting."
       if [[ $- == *i* ]]
       then
@@ -190,7 +190,7 @@ test-ncp-instance() {
       fi
       [[ "${choice,,}" == "y" ]] || {
         echo ""
-        exit 2
+        return 2
       }
       failed=yes
     }
@@ -216,7 +216,7 @@ test-ncp-instance() {
 
   [[ "$failed" != "yes" ]] || {
     [[ -z "$snapshot_id" ]] || hcloud image add-label -o "$snapshot_id" "test-result=failure"
-    exit 2
+    return 2
   }
 
   echo "All tests succeeded"
