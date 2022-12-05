@@ -15,6 +15,7 @@ resource "hcloud_server" "server" {
       user     = "root"
       private_key = "${var.admin_ssh_privkey}"
       host     = self.ipv4_address
+      timeout  = "15m"
     }
   }
 
