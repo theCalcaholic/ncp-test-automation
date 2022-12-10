@@ -17,9 +17,8 @@ module snapshot-provider {
     "set -e",
     "export BRANCH=\"${var.branch}\"",
     "export DBG=x",
-    "bash -c 'bash <(wget -O - https://raw.githubusercontent.com/nextcloud/nextcloudpi/${var.branch}/install.sh)' | tee /var/log/ncp-install.log || echo \"SOMETHING WENT WRONG (exit code $?)\"",
     # Reenable root user for ssh access
-    "sed -i '/^root/s/\\/usr\\/sbin\\/nologin/\\/bin\\/bash/' /etc/passwd",
+    "bash -c 'bash <(wget -O - https://raw.githubusercontent.com/nextcloud/nextcloudpi/${var.branch}/install.sh)' | tee /var/log/ncp-install.log || echo \"SOMETHING WENT WRONG (exit code $?)\"; sed -i '/^root/s/\\/usr\\/sbin\\/nologin/\\/bin\\/bash/' /etc/passwd",
     # Avoids mariadb being killed (by poweroff)
     "systemctl stop mariadb",
     "systemctl poweroff"
