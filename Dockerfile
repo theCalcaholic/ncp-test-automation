@@ -1,6 +1,6 @@
 FROM alpine:latest as builder
 
-RUN apk add python3~=3.9 py3-pip build-base python3-dev musl-dev libffi-dev openssl-dev py3-virtualenv rust cargo
+RUN apk add python3 py3-pip build-base python3-dev musl-dev libffi-dev openssl-dev py3-virtualenv rust cargo
 RUN pip install selenium
 
 FROM alpine:latest
@@ -10,7 +10,7 @@ ENV SSH_PUBLIC_KEY=""
 ENV HCLOUD_TOKEN=""
 ENV DOCKER=true
 
-RUN apk add python3~=3.9 py3-pip bash git openssh firefox
+RUN apk add python3 py3-pip bash git openssh firefox
 COPY --from=builder /usr/lib/python3.9/site-packages /usr/lib/python3.9/site-packages
 RUN ln -s /usr/bin/python3 /usr/bin/python
 WORKDIR /usr/local/bin/
