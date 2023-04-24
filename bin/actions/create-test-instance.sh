@@ -22,6 +22,8 @@ tf-apply "$TF_TEST_ENV" "$TF_VAR_FILE" \
 -var="branch=${branch}" \
 -var="admin_ssh_pubkey_fingerprint=${ssh_pubkey_fprint}"
 
-echo "::set-output name=server_address::$(tf-output "$TF_TEST_ENV" test_server_ipv4)"
-echo "::set-output name=snapshot_id::$(tf-output "$TF_TEST_ENV" snapshot_id)"
-echo "::set-output name=test_server_id::$(tf-output "$TF_TEST_ENV" test_server_id)"
+{
+  echo "server_address=$(tf-output "$TF_TEST_ENV" test_server_ipv4)"
+  echo "snapshot_id=$(tf-output "$TF_TEST_ENV" snapshot_id)"
+  echo "test_server_id=$(tf-output "$TF_TEST_ENV" test_server_id)"
+} | tee -a "$GITHUB_OUTPUT"
