@@ -91,7 +91,19 @@ ensure-postinstall-snapshot() {
 
   (
   set -e
-  if [[ " $* " =~ .*" --force ".* ]] || ! hcloud image list -t snapshot -l "type=ncp-postinstall,branch=${branch//\//-}${UID:+",ci=${UID}"}" -o noheader -o columns=created | grep -qv -e day  -e week -e year -e month
+  age_limit="$(date +%s)"
+  age_limit=$((age_limit - (24 * 3600)))
+  image_found=false
+  while read -r image_date
+  do
+    image_secs="$(date -d "$image_date" +%s)"
+    [[ $age_limit -le $image_secs ]] && {
+      image_found=true
+      break
+    }
+  done <<<"$(hcloud image list -t snapshot -l "type=ncp-postinstall,branch=${branch//\//-},test-result=success${UID:+",ci=${UID}"}" -o noheader -o columns=created)"
+
+  if [[ " $* " =~ .*" --force ".* ]] || [[ "$image_found" == "true" ]]
   then
     trap 'tf-destroy "$TF_SNAPSHOT_PROVIDER" "$TF_VAR_FILE" -var="branch=${branch}" -var="admin_ssh_pubkey_fingerprint=${ssh_pubkey_fprint}"' EXIT
     echo "Creating ncp postinstall snapshot"
@@ -224,4 +236,12 @@ test-ncp-instance() {
 
   )
 
+}
+
+# Deletes the latest hcloud images, keeping $1 (default: 1)
+delete_hcloud_images() {
+  for img in $(hcloud image list -t snapshot -o noheader -o columns=id | head -n "-${1:-1}")
+  do
+    hcloud image delete "$img"
+  done
 }

@@ -15,6 +15,8 @@ hcloud-clear-root-key
 tf-apply "$TF_PROJECT_SETUP" "$TF_VAR_FILE"
 ssh_pubkey_fprint="$(tf-output "$TF_PROJECT_SETUP" admin_ssh_pubkey_fingerprint)"
 
+delete_hcloud_images 10
+
 ensure-postinstall-snapshot "$ssh_pubkey_fprint" "$branch" || {
   echo "Could not create ncp postinstall snapshot (and none was present)"
   exit 1

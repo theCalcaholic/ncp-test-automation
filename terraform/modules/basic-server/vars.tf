@@ -14,7 +14,7 @@ variable "server_type" {
 }
 
 variable "location" {
-  default = "fsn1"
+  default = "hel1"
 }
 
 variable "post_setup_script" {
