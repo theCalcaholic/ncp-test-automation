@@ -13,7 +13,7 @@ ENV DOCKER=true
 RUN apk add python3 py3-pip bash git openssh firefox
 COPY --from=builder /usr/lib/python3.11/site-packages /usr/lib/python3.11/site-packages
 WORKDIR /usr/local/bin/
-RUN wget -qO - https://github.com/mozilla/geckodriver/releases/download/v0.31.0/geckodriver-v0.31.0-linux64.tar.gz | tar xz \
+RUN wget -qO - https://github.com/mozilla/geckodriver/releases/download/v0.33.0/geckodriver-v0.33.0-linux64.tar.gz | tar xz \
     && chmod +x /usr/local/bin/geckodriver
 RUN wget -qO - https://releases.hashicorp.com/terraform/1.1.8/terraform_1.1.8_linux_amd64.zip | busybox unzip - \
     && chmod +x /usr/local/bin/terraform
