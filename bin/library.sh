@@ -96,6 +96,7 @@ ensure-postinstall-snapshot() {
   image_found=false
   while read -r image_date
   do
+    [[ -n "$image_date" ]] || continue
     image_secs="$(date -d "$image_date" +%s)"
     [[ $age_limit -le $image_secs ]] && {
       image_found=true
@@ -103,7 +104,7 @@ ensure-postinstall-snapshot() {
     }
   done <<<"$(hcloud image list -t snapshot -l "type=ncp-postinstall,branch=${branch//\//-},test-result=success${UID:+",ci=${UID}"}" -o noheader -o columns=created)"
 
-  if [[ " $* " =~ .*" --force ".* ]] || [[ "$image_found" == "true" ]]
+  if [[ " $* " =~ .*" --force ".* ]] || [[ "$image_found" != "true" ]]
   then
     trap 'tf-destroy "$TF_SNAPSHOT_PROVIDER" "$TF_VAR_FILE" -var="branch=${branch}" -var="admin_ssh_pubkey_fingerprint=${ssh_pubkey_fprint}"' EXIT
     echo "Creating ncp postinstall snapshot"
@@ -194,7 +195,7 @@ test-ncp-instance() {
 
       [[ "${KW_ARGS['-n']}" != "true" ]] || return 2
       echo "You can also connect to the instance with 'ssh root@<server-ip>' for troubleshooting."
-      if [[ $- == *i* ]]
+      if [[ -t 0 ]]
       then
         read -n 1 -rp "Continue anyway (will tear down the server)? (y|N)" choice
       else

@@ -56,7 +56,7 @@ test-ncp-instance -a -f "$snapshot_id" -b "${branch}" "root@${ipv4_address}" "lo
 
   echo "WARNING! The integration tests have failed!"
 
-  if [[ $- == *i* ]]
+  if [[ -t 0 ]]
   then
     read -n 1 -rp "Do you want to retry after a reboot? (y|N)" choice
     echo ""
