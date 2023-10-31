@@ -218,8 +218,9 @@ test-ncp-instance() {
   fi
 
   sys_test_args=()
-  [[ -z "${NAMED_ARGS['--systemtest-args']}" ]] || IFS=' ' read -r -a sys_test_args <<<"${NAMED_ARGS['--systemtest-args']}"
+  [[ -z "${KW_ARGS['--systemtest-args']}" ]] || IFS=' ' read -r -a sys_test_args <<<"${KW_ARGS['--systemtest-args']}"
   [[ "$CI" == "true" ]] && sys_test_args+=("--no-ping")
+  echo "Running system test with arguments: '${sys_test_args[*]}'"
   python system_tests.py "${sys_test_args[@]}" "${NAMED_ARGS['ssh-connection']}" || {
     echo "System test failed!"
     failed=yes
