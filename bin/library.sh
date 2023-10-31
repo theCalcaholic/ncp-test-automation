@@ -147,7 +147,7 @@ terminate-ssh-port-forwarding() {
 test-ncp-instance() {
 
   local DESCRIPTION="Runs automated integration tests against an ncp instance"
-  local KEYWORDS=("-a|--activate;bool" "-f|--flag-snapshot" "-n|--non-interactive;bool" "-b|--branch")
+  local KEYWORDS=("-a|--activate;bool" "-f|--flag-snapshot" "-n|--non-interactive;bool" "-b|--branch" "--systemtest-args")
   local REQUIRED=("ssh-connection" "server-address" "nc-port" "webui-port")
   local -A USAGE
   USAGE['server]']="The address (IP address, URL, ...) of the ncp instance. Needs to be reachable passwordless via ssh with user root"
@@ -159,6 +159,7 @@ test-ncp-instance() {
   USAGE['-f']="flag snapshot given as snapshot id with test result (success or failure)"
   USAGE['-n']="Omit all interactive dialogs (and assume default answer)"
   USAGE['-b']="Specify the branch to checkout for the ncp integration tests (default: master)"
+  USAGE['--systemtest-args']="Additional parameters to system_test.py"
 
   parse_args "$@" || return $?
 
@@ -217,6 +218,7 @@ test-ncp-instance() {
   fi
 
   sys_test_args=()
+  [[ -z "${NAMED_ARGS['--systemtest-args']}" ]] || IFS=' ' read -r -a sys_test_args <<<"${NAMED_ARGS['--systemtest-args']}"
   [[ "$CI" == "true" ]] && sys_test_args+=("--no-ping")
   python system_tests.py "${sys_test_args[@]}" "${NAMED_ARGS['ssh-connection']}" || {
     echo "System test failed!"
