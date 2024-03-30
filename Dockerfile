@@ -1,7 +1,7 @@
 FROM alpine:latest as builder
 
 RUN apk add python3 py3-pip build-base python3-dev musl-dev libffi-dev openssl-dev py3-virtualenv rust cargo
-RUN pip install selenium
+RUN python3 -m venv /venv && /venv/bin/pip install selenium
 
 FROM alpine:latest
 
@@ -11,7 +11,7 @@ ENV HCLOUD_TOKEN=""
 ENV DOCKER=true
 
 RUN apk add python3 py3-pip bash git openssh firefox
-COPY --from=builder /usr/lib/python3.11/site-packages /usr/lib/python3.11/site-packages
+COPY --from=builder /venv /venv
 WORKDIR /usr/local/bin/
 RUN wget -qO - https://github.com/mozilla/geckodriver/releases/download/v0.33.0/geckodriver-v0.33.0-linux64.tar.gz | tar xz \
     && chmod +x /usr/local/bin/geckodriver

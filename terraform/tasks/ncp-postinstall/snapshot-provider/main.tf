@@ -5,7 +5,7 @@ data "hcloud_ssh_key" "admin_key" {
 module snapshot-provider {
   source = "../../../modules/basic-server"
   ssh_public_keys = [data.hcloud_ssh_key.admin_key.id]
-  disk-image = "debian-11"
+  disk-image = "debian-12"
   server_type = var.server_type
 
   name = "ncp-postinstall-snapshot-provider${var.uid_suffix}"
