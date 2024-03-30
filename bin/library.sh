@@ -9,6 +9,9 @@ SSH_SOCKET_OPTIONS=()
 [[ -n "$DOCKER" ]] || SSH_SOCKET_OPTIONS+=(-S "$ssh_control_socket")
 [[ -z "$SSH_PRIVATE_KEY_PATH" ]] || SSH_OPTIONS+=(-i "${SSH_PRIVATE_KEY_PATH}")
 
+PYTHON="$(which python)"
+[[ -f "/venv/bin/python" ]] && PYTHON="/venv/bin/python"
+
 export TF_VAR_FILE="${PROJECT_ROOT}/terraform/terraform.tfvars"
 export TF_TASKS_ROOT="${PROJECT_ROOT}/terraform/tasks"
 export TF_PROJECT_SETUP="${TF_TASKS_ROOT}/project-setup"
@@ -190,7 +193,7 @@ test-ncp-instance() {
 
   if [[ "${KW_ARGS['-a']:-${KW_ARGS['--activate']}}" == "true" ]]
   then
-    python activation_tests.py "${test_args[@]}" "${NAMED_ARGS['server-address']}" "${NAMED_ARGS['nc-port']}" "${NAMED_ARGS['webui-port']}" || {
+    "$PYTHON" activation_tests.py "${test_args[@]}" "${NAMED_ARGS['server-address']}" "${NAMED_ARGS['nc-port']}" "${NAMED_ARGS['webui-port']}" || {
       tail -n 20 geckodriver.log >&2 || true
       echo "======================="
       echo "Activation test failed!"
@@ -222,13 +225,13 @@ test-ncp-instance() {
   [[ -z "${KW_ARGS['--systemtest-args']}" ]] || IFS=' ' read -r -a sys_test_args <<<"${KW_ARGS['--systemtest-args']}"
   [[ "$CI" == "true" ]] && sys_test_args+=("--no-ping")
   echo "Running system test with arguments: '${sys_test_args[*]}'"
-  python system_tests.py "${sys_test_args[@]}" "${NAMED_ARGS['ssh-connection']}" || {
+  "$PYTHON" system_tests.py "${sys_test_args[@]}" "${NAMED_ARGS['ssh-connection']}" || {
     echo "System test failed!"
     failed=yes
   }
   nc_test_args=()
   [[ -z "${KW_ARGS['--nc-test-args']}" ]] || IFS=' ' read -r -a nc_test_args <<<"${KW_ARGS['--nc-test-args']}"
-  python nextcloud_tests.py "${test_args[@]}" "${nc_test_args[@]}" "${NAMED_ARGS['server-address']}" "${NAMED_ARGS['nc-port']}" "${NAMED_ARGS['webui-port']}" || {
+  "$PYTHON" nextcloud_tests.py "${test_args[@]}" "${nc_test_args[@]}" "${NAMED_ARGS['server-address']}" "${NAMED_ARGS['nc-port']}" "${NAMED_ARGS['webui-port']}" || {
     echo "Nextcloud test failed!"
     failed=yes
   }
