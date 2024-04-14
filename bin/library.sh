@@ -11,6 +11,8 @@ SSH_SOCKET_OPTIONS=()
 
 PYTHON="$(which python)"
 [[ -f "/venv/bin/python" ]] && PYTHON="/venv/bin/python"
+PIP=pip
+[[ -f "/venv/bin/pip" ]] && PIP=/venv/bin/pip
 
 export TF_VAR_FILE="${PROJECT_ROOT}/terraform/terraform.tfvars"
 export TF_TASKS_ROOT="${PROJECT_ROOT}/terraform/tasks"
@@ -182,7 +184,7 @@ test-ncp-instance() {
     virtualenv "$NCP_AUTOMATION_DIR/venv"
     . "$NCP_AUTOMATION_DIR/venv/bin/activate"
   }
-  pip install selenium
+  "$PIP" install selenium
   git clone https://github.com/nextcloud/nextcloudpi.git
   cd nextcloudpi/tests
   git checkout "${KW_ARGS['-b']:-master}"
