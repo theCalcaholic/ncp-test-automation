@@ -16,6 +16,7 @@ module snapshot-provider {
   post_setup_script = [
     "#!/bin/bash",
     "set -e",
+    "export DEBIAN_FRONTEND=noninteractive",
     "export BRANCH=\"${var.branch}\"",
     "export DBG=x",
     "trap 'systemctl stop mariadb; systemctl poweroff' EXIT",

@@ -111,9 +111,9 @@ ensure-postinstall-snapshot() {
   then
     trap 'tf-destroy "$TF_SNAPSHOT_PROVIDER" "$TF_VAR_FILE" -var="branch=${branch}" -var="admin_ssh_pubkey_fingerprint=${ssh_pubkey_fprint}"' EXIT
     echo "Creating ncp postinstall snapshot"
-    tf-apply "$TF_SNAPSHOT_PROVIDER" "$TF_VAR_FILE" -var="branch=${branch}" -var="admin_ssh_pubkey_fingerprint=${ssh_pubkey_fprint}"
+    tf-apply "$TF_SNAPSHOT_PROVIDER" "$TF_VAR_FILE" -var="branch=${branch}" -var="admin_ssh_pubkey_fingerprint=${ssh_pubkey_fprint}" || return $?
     snapshot_provider_id="$(tf-output "$TF_SNAPSHOT_PROVIDER" snapshot_provider_id)"
-    tf-apply "$TF_SNAPSHOT" "$TF_VAR_FILE" -var="branch=${branch}" -var="snapshot_provider_id=${snapshot_provider_id}" -var="snapshot_type=ncp-postinstall" -state="${TF_SNAPSHOT}/${branch//\//.}.postinstall.tfstate"
+    tf-apply "$TF_SNAPSHOT" "$TF_VAR_FILE" -var="branch=${branch}" -var="snapshot_provider_id=${snapshot_provider_id}" -var="snapshot_type=ncp-postinstall" -state="${TF_SNAPSHOT}/${branch//\//.}.postinstall.tfstate" || return $?
     tf-destroy "$TF_SNAPSHOT_PROVIDER" "$TF_VAR_FILE" -var="branch=${branch}" -var="admin_ssh_pubkey_fingerprint=${ssh_pubkey_fprint}"
   else
     echo "Reusing existing ncp postinstall snapshot"
