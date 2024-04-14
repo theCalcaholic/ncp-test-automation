@@ -152,7 +152,7 @@ terminate-ssh-port-forwarding() {
 test-ncp-instance() {
 
   local DESCRIPTION="Runs automated integration tests against an ncp instance"
-  local KEYWORDS=("-a|--activate;bool" "-f|--flag-snapshot" "-n|--non-interactive;bool" "-b|--branch" "--systemtest-args", "--nc-test-args")
+  local KEYWORDS=("-a|--activate;bool" "-f|--flag-snapshot" "-n|--non-interactive;bool" "-b|--branch" "--systemtest-args" "--nc-test-args")
   local REQUIRED=("ssh-connection" "server-address" "nc-port" "webui-port")
   local -A USAGE
   USAGE['server]']="The address (IP address, URL, ...) of the ncp instance. Needs to be reachable passwordless via ssh with user root"
