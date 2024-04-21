@@ -239,12 +239,12 @@ test-ncp-instance() {
   }
 
   [[ "$failed" != "yes" ]] || {
-    [[ -z "$snapshot_id" ]] || hcloud image add-label -o "$snapshot_id" "test-result=failure"
+    [[ -z "$snapshot_id" ]] || hcloud image add-label -o "$snapshot_id" "test-result=failure" || echo "WARN: Failed to update activation image label!"
     return 2
   }
 
   echo "All tests succeeded"
-  [[ -z "$snapshot_id" ]] || hcloud image add-label -o "$snapshot_id" "test-result=success"
+  [[ -z "$snapshot_id" ]] || hcloud image add-label -o "$snapshot_id" "test-result=success" || echo "WARN: Failed to update activation image label!"
 
   )
 
