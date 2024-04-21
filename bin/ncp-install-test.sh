@@ -94,6 +94,6 @@ systemctl poweroff
 EOF
 tf-apply "$TF_SNAPSHOT" "$TF_VAR_FILE" -var="branch=${branch}" -var="snapshot_provider_id=${test_server_id}" -var="snapshot_type=ncp-postactivation" -state="${TF_SNAPSHOT}/${branch//\//.}.postactivation.tfstate"
 snapshot_id="$(tf-output "$TF_SNAPSHOT" -state="${TF_SNAPSHOT}/${branch//\//.}.postactivation.tfstate" snapshot_id)"
-hcloud image add-label -o "$snapshot_id" "test-result=${test_result}"
+hcloud image add-label -o "$snapshot_id" "test-result=${test_result}" || echo "WARN: Failed to update activation image label!"
 
 [[ "$test_result" == "success" ]]
