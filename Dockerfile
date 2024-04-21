@@ -17,7 +17,7 @@ RUN wget -qO - https://github.com/mozilla/geckodriver/releases/download/v0.33.0/
     && chmod +x /usr/local/bin/geckodriver
 RUN wget -qO - https://releases.hashicorp.com/terraform/1.1.8/terraform_1.1.8_linux_amd64.zip | busybox unzip - \
     && chmod +x /usr/local/bin/terraform
-RUN wget -qO - https://github.com/hetznercloud/cli/releases/download/v1.29.4/hcloud-linux-amd64.tar.gz | tar xz \
+RUN wget -qO - https://github.com/hetznercloud/cli/releases/download/v1.43.0/hcloud-linux-amd64.tar.gz | tar xz \
     && chmod +x /usr/local/bin/hcloud
 RUN addgroup github && adduser -G github -D github
 COPY --chown=github:github bin /ncp-test-automation/bin
