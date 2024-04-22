@@ -14,6 +14,12 @@ PYTHON="$(which python)"
 PIP=pip
 [[ -f "/venv/bin/pip" ]] && PIP=/venv/bin/pip
 
+if command -v busybox > /dev/null 2>&1
+then
+  alias date="date -D '%a %b %d %T %Z %Y'"
+fi
+
+
 export TF_VAR_FILE="${PROJECT_ROOT}/terraform/terraform.tfvars"
 export TF_TASKS_ROOT="${PROJECT_ROOT}/terraform/tasks"
 export TF_PROJECT_SETUP="${TF_TASKS_ROOT}/project-setup"
