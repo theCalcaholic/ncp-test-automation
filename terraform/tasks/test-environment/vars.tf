@@ -26,5 +26,5 @@ variable "uid_suffix" {
 
 variable "server_type" {
   type = string
-  default = "cx11"
+  default = "cx22"
 }

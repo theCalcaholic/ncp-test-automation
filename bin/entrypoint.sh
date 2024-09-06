@@ -22,7 +22,7 @@ admin_ssh_pubkey_path = "$SSH_PUBLIC_KEY_PATH"
 admin_ssh_pubkey = "$SSH_PUBLIC_KEY"
 hcloud_api_token = "$HCLOUD_TOKEN"
 uid_suffix = "${UID:+-$UID}"
-server_type = "${SERVER_TYPE:-cx11}"
+server_type = "${SERVER_TYPE:-cx22}"
 EOF
 
 bash "$@"
