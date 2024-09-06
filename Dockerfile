@@ -10,7 +10,7 @@ ENV SSH_PUBLIC_KEY=""
 ENV HCLOUD_TOKEN=""
 ENV DOCKER=true
 
-RUN apk add python3 py3-pip bash git openssh firefox
+RUN apk add python3 py3-pip bash git openssh firefox jq
 COPY --from=builder /venv /venv
 WORKDIR /usr/local/bin/
 RUN wget -qO - https://github.com/mozilla/geckodriver/releases/download/v0.33.0/geckodriver-v0.33.0-linux64.tar.gz | tar xz \
