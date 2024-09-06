@@ -10,7 +10,7 @@ variable "name" {
 }
 
 variable "server_type" {
-  default = "cx11"
+  default = "cx22"
 }
 
 variable "location" {
