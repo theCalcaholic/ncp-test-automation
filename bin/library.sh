@@ -9,7 +9,7 @@ SSH_SOCKET_OPTIONS=()
 [[ -n "$DOCKER" ]] || SSH_SOCKET_OPTIONS+=(-S "$ssh_control_socket")
 [[ -z "$SSH_PRIVATE_KEY_PATH" ]] || SSH_OPTIONS+=(-i "${SSH_PRIVATE_KEY_PATH}")
 
-PYTHON="$(which python)"
+PYTHON="$(which python || which python3)"
 [[ -f "/venv/bin/python" ]] && PYTHON="/venv/bin/python"
 PIP=pip
 [[ -f "/venv/bin/pip" ]] && PIP=/venv/bin/pip
@@ -228,6 +228,12 @@ test-ncp-instance() {
       echo "Could not load test config. Tests will be interactive." >&2
     }
   fi
+
+  ssh "${SSH_OPTIONS[@]}" "${NAMED_ARGS['ssh-connection']}" bash <<'EOF'
+set -x
+ncc config:system:set overwrite.cli.url --value "https://$(ncc config:system:get trusted_domains 11)"
+bash /usr/local/bin/nextcloud-domain.sh
+EOF
 
   sys_test_args=()
   [[ -z "${KW_ARGS['--systemtest-args']}" ]] || IFS=' ' read -r -a sys_test_args <<<"${KW_ARGS['--systemtest-args']}"
