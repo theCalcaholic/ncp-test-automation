@@ -231,6 +231,7 @@ test-ncp-instance() {
 
   ssh "${SSH_OPTIONS[@]}" "${NAMED_ARGS['ssh-connection']}" bash <<'EOF'
 set -x
+export DBG=x
 ncc config:system:set overwrite.cli.url --value "https://$(ncc config:system:get trusted_domains 11)"
 bash /usr/local/bin/nextcloud-domain.sh
 EOF

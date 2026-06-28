@@ -22,7 +22,7 @@ RUN wget -qO terraform.zip https://releases.hashicorp.com/terraform/1.1.8/terraf
     && chmod +x /usr/local/bin/terraform
 RUN wget -qO - https://github.com/hetznercloud/cli/releases/download/v1.43.0/hcloud-linux-amd64.tar.gz | tar xz \
     && chmod +x /usr/local/bin/hcloud
-RUN addgroup github && adduser -G github -D github
+RUN groupadd github && useradd -g github github
 COPY --chown=github:github bin /ncp-test-automation/bin
 COPY --chown=github:github terraform /ncp-test-automation/terraform
 COPY --chown=github:github lib /ncp-test-automation/lib
